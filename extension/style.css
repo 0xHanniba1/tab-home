@@ -266,7 +266,7 @@ header {
   white-space: nowrap;
 }
 
-/* Spacing between the Pinned + Open-tabs sub-sections inside the column */
+/* Spacing between stacked open-tab sub-sections. */
 .active-subsection + .active-subsection {
   margin-top: 18px;
 }
@@ -285,8 +285,9 @@ header {
 
 /* ---- Mission Cards ---- */
 .missions {
-  columns: 280px;
-  column-gap: 12px;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 12px;
   margin-bottom: 40px;
 }
 
@@ -302,8 +303,7 @@ header {
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  break-inside: avoid;       /* don't split a card across columns */
-  margin-bottom: 12px;       /* vertical spacing (replaces grid gap) */
+  min-height: 0;
 }
 
 /* Colored top border instead of side bar for grid cards */
@@ -451,9 +451,11 @@ header {
 .chip-text {
   flex: 1;
   min-width: 0;
+  box-sizing: border-box;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  transition: padding-right 0.15s;
 }
 
 /* Duplicate badge — looks like a small button. Hover swaps "(重复 × 2)" →
@@ -499,11 +501,32 @@ header {
 
 /* Action buttons grouped on the right */
 .chip-actions {
+  position: absolute;
+  right: 2px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
   display: flex;
   align-items: center;
   gap: 2px;
-  flex-shrink: 0;
-  margin-left: auto;
+  padding-left: 12px;
+  background: linear-gradient(90deg, transparent, var(--card-bg) 12px);
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.15s, visibility 0.15s;
+}
+
+.page-chip:hover .chip-actions,
+.page-chip:focus-within .chip-actions {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.page-chip:hover .chip-text,
+.page-chip:focus-within .chip-text {
+  padding-right: 92px;
 }
 
 /* ---- Chip action buttons (save + close) ---- */
@@ -535,6 +558,11 @@ header {
 .chip-close:hover {
   color: var(--status-abandoned);
   background: rgba(179, 90, 90, 0.08);
+}
+
+.chip-edit:hover {
+  color: var(--accent-amber);
+  background: rgba(200, 113, 58, 0.08);
 }
 
 .page-chip.clickable {
@@ -809,8 +837,8 @@ footer {
    SAVED FOR LATER — Checklist Column + Archive
    ================================================================ */
 
-/* ---- Two-column 50/50 layout ---- */
-/* Favorites on the left half, open tabs on the right half.
+/* ---- Two-column 70/30 layout ---- */
+/* Open tabs on the left half, pinned + favorites on the right half.
    Each side scrolls independently; the page itself never scrolls. */
 .dashboard-columns {
   flex: 1;
@@ -821,21 +849,63 @@ footer {
   overflow-y: hidden;
 }
 
-/* Open tabs column (right half) */
+/* Main open-tabs column (left) */
 .dashboard-columns .active-section {
-  flex: 1 1 50%;
+  flex: 1 1 70%;
   min-width: 0;
   overflow-y: auto;
   padding-right: 4px;
 }
 
-/* Favorites column (left half) — scrolls vertically when content exceeds
-   the viewport. There's no hard cap on favorite count anymore. */
-.favorites-column {
-  flex: 1 1 50%;
-  min-width: 0;
+/* Utility column (right): compact quick access. */
+.side-column {
+  flex: 0 0 30%;
+  min-width: 280px;
+  max-width: 420px;
   overflow-y: auto;
   padding-right: 4px;
+  display: flex;
+  flex-direction: column;
+}
+
+.side-column-header {
+  flex-shrink: 0;
+  margin-bottom: 10px;
+}
+
+.side-column #pinnedSubSection {
+  flex-shrink: 0;
+  margin-bottom: 16px;
+}
+
+.side-column #pinnedMissions {
+  columns: auto;
+  margin-bottom: 0;
+}
+
+.pinned-tab-list {
+  background: var(--card-bg);
+  border: 1px solid var(--warm-gray);
+  display: flex;
+  flex-direction: column;
+}
+
+.pinned-tab-list .page-chip {
+  padding: 6px 8px;
+}
+
+.pinned-tab-list .chip-favicon {
+  width: 15px;
+  height: 15px;
+}
+
+.pinned-tab-list .chip-text {
+  font-size: 12px;
+}
+
+/* Favorites column (inside the right utility column). */
+.favorites-column {
+  min-width: 0;
   display: flex;
   flex-direction: column;
 }
@@ -845,6 +915,25 @@ footer {
 .favorites-column .favorites-list {
   flex: 1;
   align-content: start;
+}
+
+.side-column .favorites-list {
+  grid-template-columns: repeat(auto-fill, minmax(62px, 1fr));
+}
+
+.side-column .favorite-item {
+  gap: 4px;
+  padding: 6px 4px;
+}
+
+.side-column .favorite-favicon {
+  width: clamp(28px, 45%, 40px);
+  border-radius: 6px;
+}
+
+.side-column .favorite-title {
+  font-size: 10px;
+  line-height: 1.15;
 }
 
 /* ---- Favorites column ---- */
@@ -948,6 +1037,22 @@ footer {
   font-size: 13px;
   color: var(--ink);
   line-height: 1.5;
+}
+
+.confirm-input {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 13px;
+  color: var(--ink);
+  background: var(--paper);
+  border: 1px solid var(--warm-gray);
+  border-radius: 0;
+  padding: 8px 10px;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.confirm-input:focus {
+  border-color: var(--accent-amber);
 }
 
 .confirm-actions {
@@ -1292,5 +1397,3 @@ body.dragging-favorite .favorite-slot-empty.drop-target {
 .chip-pin:hover     { color: var(--accent-sage); }
 .chip-pin.active,
 .chip-pin.active:hover  { color: var(--accent-sage); }
-
-

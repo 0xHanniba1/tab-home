@@ -2,7 +2,7 @@
 
 **让你的新标签页有意义。**
 
-tab-home 是一个 Chrome 浏览器扩展，把默认的「新标签页」替换成一个干净的个人仪表板：左侧是长期收藏的网址，右侧是当前打开的所有标签（按域名分组）。
+tab-home 是一个 Chrome 浏览器扩展，把默认的「新标签页」替换成一个干净的个人仪表板：左侧是当前打开的普通标签（按域名分组），右侧是 Quick Access（固定标签和长期收藏）。
 
 完全本地运行——无服务器、无账号、不联网上传任何数据。Fork 自 [tab-out](https://github.com/zarazhangrui/tab-out) by [Zara](https://x.com/zarazhangrui)。
 
@@ -10,7 +10,7 @@ tab-home 是一个 Chrome 浏览器扩展，把默认的「新标签页」替换
 
 ## 主要功能
 
-### 收藏区（左半屏）
+### 收藏区（右半屏）
 - **9×9 网格**，最多收藏 81 个网址
 - 鼠标悬停 → 右上角出现 ⋯ 菜单，可编辑或删除
 - 自动抓取网站 logo（优先 `apple-touch-icon.png`，兜底 Chrome 缓存的 favicon）
@@ -18,9 +18,9 @@ tab-home 是一个 Chrome 浏览器扩展，把默认的「新标签页」替换
 - **自定义 logo**：编辑收藏时可上传图片或直接 `Cmd+V` 粘贴剪贴板里的图片，自动压缩到 256×256
 - **智能命名**：留空标题自动从 URL 提取品牌名（`www.binance.com` → `Binance`，`accounts.binance.com` → `Binance`）
 
-### 当前标签区（右半屏）
-- 按域名自动分组成卡片
-- **固定标签**单独置顶显示，与未固定的明确分开
+### 当前标签区（左半屏）
+- 普通标签按域名自动分组成卡片
+- **固定标签**移动到右侧顶部显示，与未固定的明确分开
 - 每个标签卡片有四个操作：
   - ⭐ 加入收藏 / 取消收藏（取消时弹自定义确认框）
   - 📌 固定 / 取消固定
@@ -78,8 +78,7 @@ git clone https://github.com/wolfyxbt/tab-home.git
 
 ```
 你打开新标签页
-  → tab-home 显示左侧收藏 + 右侧当前标签（按域名分组）
-  → 固定标签独立置顶
+  → tab-home 显示左侧普通标签（按域名分组）+ 右侧 Quick Access（固定标签和收藏）
   → 点击任意标签即可切过去
   → 关掉一组（X 按钮 + 撒花动画 + 音效）
 ```
@@ -117,4 +116,3 @@ MIT
 ---
 
 tab-home by [WolfyXBT](https://x.com/wolfyxbt) · forked from [tab-out](https://github.com/zarazhangrui/tab-out) by [Zara](https://x.com/zarazhangrui)
-

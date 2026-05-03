@@ -21,12 +21,12 @@
        ================================================================ -->
   <header>
     <div class="header-left">
-      <!-- "Sunday · 03/05/2026" — written by getDateDisplay() in app.js -->
+      <!-- "Sunday · 03/05/2026" — written by getDateDisplay() in ui.js -->
       <div class="date" id="dateDisplay"></div>
     </div>
     <div class="header-right">
       <!-- tab-home duplicate-tabs pill — appears when more than one new-tab page
-           is open. Hidden by default; app.js shows it as inline-flex. -->
+           is open. Hidden by default; tabs.js shows it as inline-flex. -->
       <div class="tab-cleanup-banner" id="tabOutDupeBanner" style="display:none">
         <div class="tab-cleanup-left">
           <div class="tab-cleanup-icon">
@@ -48,35 +48,35 @@
   </header>
 
   <!-- ================================================================
-       MAIN CONTENT AREA — three-column layout
-       Left:   long-term favorites (pinned URLs that persist forever)
-       Middle: open tabs (domain/mission cards)
-       Right:  saved for later checklist
+       MAIN CONTENT AREA — two-column layout
+       Left:  open tabs (domain/mission cards)
+       Right: pinned tabs + long-term favorites
        Each column scrolls independently — the page itself never scrolls.
        ================================================================ -->
   <div class="dashboard-columns" id="dashboardColumns">
 
-    <!-- LEFT COLUMN: Long-term favorites -->
-    <div class="favorites-column" id="favoritesColumn">
-      <div class="section-header">
-        <h2>Favorites</h2>
-        <div class="section-line"></div>
-        <button class="favorites-add-btn" id="favoritesAddToggle" data-action="toggle-favorite-form" title="Add a favorite">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
-        </button>
+    <!-- LEFT COLUMN: Regular open tabs only -->
+    <div class="active-section" id="openTabsSection" style="display:none">
+
+      <div class="active-subsection" id="openTabsSubSection">
+        <div class="section-header">
+          <h2 id="openTabsSectionTitle">Right now</h2>
+          <div class="section-line"></div>
+          <div class="section-count" id="openTabsSectionCount"></div>
+          <!-- "Close all N tabs" lives at the right edge of the header -->
+          <div class="section-action" id="openTabsSectionAction"></div>
+        </div>
+        <div class="missions" id="openTabsMissions"></div>
       </div>
 
-      <!-- List of favorites — populated by renderFavoritesColumn() -->
-      <div class="favorites-list" id="favoritesList"></div>
-
-      <!-- Empty state -->
-      <div class="favorites-empty" id="favoritesEmpty" style="display:none">
-        Nothing pinned yet. Click + to add a URL, or star a tab on the right.
-      </div>
     </div>
 
-    <!-- MIDDLE COLUMN: Open tabs (pinned at the top, regular below) -->
-    <div class="active-section" id="openTabsSection" style="display:none">
+    <!-- RIGHT COLUMN: Pinned tabs + long-term favorites -->
+    <div class="side-column" id="sideColumn">
+      <div class="side-column-header section-header">
+        <h2 id="quickAccessTitle">Quick Access</h2>
+        <div class="section-line"></div>
+      </div>
 
       <!-- Pinned-tabs sub-section — only shown when at least one tab is pinned. -->
       <div class="active-subsection" id="pinnedSubSection" style="display:none">
@@ -88,16 +88,22 @@
         <div class="missions" id="pinnedMissions"></div>
       </div>
 
-      <!-- Regular open-tabs sub-section. -->
-      <div class="active-subsection" id="openTabsSubSection">
+      <div class="favorites-column" id="favoritesColumn">
         <div class="section-header">
-          <h2 id="openTabsSectionTitle">Right now</h2>
+          <h2>Favorites</h2>
           <div class="section-line"></div>
-          <div class="section-count" id="openTabsSectionCount"></div>
-          <!-- "Close all N tabs" lives at the right edge of the header -->
-          <div class="section-action" id="openTabsSectionAction"></div>
+          <button class="favorites-add-btn" id="favoritesAddToggle" data-action="toggle-favorite-form" title="Add a favorite">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+          </button>
         </div>
-        <div class="missions" id="openTabsMissions"></div>
+
+        <!-- List of favorites — populated by renderFavoritesColumn() -->
+        <div class="favorites-list" id="favoritesList"></div>
+
+        <!-- Empty state -->
+        <div class="favorites-empty" id="favoritesEmpty" style="display:none">
+          Nothing pinned yet. Click + to add a URL, or star a tab on the left.
+        </div>
       </div>
 
     </div>
@@ -179,8 +185,17 @@
 </div>
 
 <!-- Personal config (gitignored) — defines LOCAL_LANDING_PAGE_PATTERNS etc. -->
-<!-- If the file doesn't exist, that's fine — app.js uses sensible defaults. -->
+<!-- If the file doesn't exist, that's fine — domain.js uses sensible defaults. -->
 <script src="config.local.js" onerror="/* no personal config, that's fine */"></script>
+
+<!-- Core dashboard helpers — split by responsibility, still no build step. -->
+<script src="settings.js"></script>
+<script src="domain.js"></script>
+<script src="favorites.js"></script>
+<script src="icons.js"></script>
+<script src="tabs.js"></script>
+<script src="ui.js"></script>
+<script src="render.js"></script>
 
 <!-- Main dashboard logic — loads last so the DOM is ready -->
 <script src="app.js"></script>

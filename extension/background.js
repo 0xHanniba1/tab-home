@@ -82,7 +82,7 @@ chrome.runtime.onInstalled.addListener(() => {
 });
 
 // ─── Right-click handler — save URL to favorites ─────────────────────────────
-// Tiny brand-name extractor (mirrors friendlyDomain in app.js for the
+// Tiny brand-name extractor (mirrors friendlyDomain in domain.js for the
 // background-script context, where we don't share helpers).
 function brandFromUrl(url) {
   try {
