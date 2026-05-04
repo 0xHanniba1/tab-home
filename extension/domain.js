@@ -270,6 +270,38 @@ function domainStableId(domain) {
   return 'domain-' + String(domain).replace(/[^a-z0-9]/g, '-');
 }
 
+function domainGroupForUrl(url, {
+  landingPagePatterns = getLandingPagePatterns(),
+  customGroups = getCustomGroups(),
+} = {}) {
+  try {
+    if (isLandingPage(url, landingPagePatterns)) {
+      return { domain: '__landing-pages__' };
+    }
+
+    const customRule = matchCustomGroup(url, customGroups);
+    if (customRule) {
+      return { domain: customRule.groupKey, label: customRule.groupLabel };
+    }
+
+    const hostname = (url && url.startsWith('file://'))
+      ? 'local-files'
+      : getMainDomain(new URL(url).hostname);
+    if (!hostname) return null;
+    return { domain: hostname };
+  } catch {
+    return null;
+  }
+}
+
+function usageCountForGroup(group, usageStats = {}) {
+  const stat = usageStats && usageStats[group.domain];
+  if (!stat) return 0;
+  if (typeof stat === 'number') return Number.isFinite(stat) ? stat : 0;
+  const count = Number(stat.count || 0);
+  return Number.isFinite(count) ? count : 0;
+}
+
 /**
  * Group an array of tabs into domain cards. Runs for pinned and regular tabs
  * separately so each sub-section has the same sorting/grouping semantics.
@@ -277,29 +309,20 @@ function domainStableId(domain) {
 function groupTabsByDomain(tabs, {
   landingPagePatterns = getLandingPagePatterns(),
   customGroups = getCustomGroups(),
+  usageStats = {},
 } = {}) {
   const groupMap = {};
-  const landing  = [];
   for (const tab of tabs) {
-    try {
-      if (isLandingPage(tab.url, landingPagePatterns)) { landing.push(tab); continue; }
-      const customRule = matchCustomGroup(tab.url, customGroups);
-      if (customRule) {
-        const key = customRule.groupKey;
-        if (!groupMap[key]) groupMap[key] = { domain: key, label: customRule.groupLabel, tabs: [] };
-        groupMap[key].tabs.push(tab);
-        continue;
-      }
-      const hostname = (tab.url && tab.url.startsWith('file://'))
-        ? 'local-files'
-        : getMainDomain(new URL(tab.url).hostname);
-      if (!hostname) continue;
-      if (!groupMap[hostname]) groupMap[hostname] = { domain: hostname, tabs: [] };
-      groupMap[hostname].tabs.push(tab);
-    } catch { /* skip malformed */ }
-  }
-  if (landing.length > 0) {
-    groupMap['__landing-pages__'] = { domain: '__landing-pages__', tabs: landing };
+    const group = domainGroupForUrl(tab.url, { landingPagePatterns, customGroups });
+    if (!group) continue;
+    if (!groupMap[group.domain]) {
+      groupMap[group.domain] = {
+        domain: group.domain,
+        ...(group.label ? { label: group.label } : {}),
+        tabs: [],
+      };
+    }
+    groupMap[group.domain].tabs.push(tab);
   }
 
   // Sort tabs WITHIN each group: most recently active first, then newer
@@ -318,7 +341,13 @@ function groupTabsByDomain(tabs, {
     const bIsLanding = b.domain === '__landing-pages__';
     if (aIsLanding !== bIsLanding) return aIsLanding ? -1 : 1;
 
-    // Primary: group with the most recently active tab comes first.
+    // Primary: frequently used domains come first. Usage stats are local-only
+    // and accumulated by the background worker when tabs are activated.
+    const aUsage = usageCountForGroup(a, usageStats);
+    const bUsage = usageCountForGroup(b, usageStats);
+    if (aUsage !== bUsage) return bUsage - aUsage;
+
+    // Tie-break: group with the most recently active tab comes first.
     // Because tabs inside each group are already sorted by recency,
     // tabs[0] holds the freshest one.
     const aTime = a.tabs[0] ? tabRecency(a.tabs[0]) : 0;
@@ -332,4 +361,3 @@ function groupTabsByDomain(tabs, {
     return bMaxId - aMaxId;
   });
 }
-

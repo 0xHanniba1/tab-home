@@ -15,6 +15,99 @@
 
 // ─── Badge updater ────────────────────────────────────────────────────────────
 
+const TAB_USAGE_STATS_KEY = 'tabUsageStats';
+const TAB_USAGE_STATS_LIMIT = 200;
+const TWO_PART_PUBLIC_SUFFIXES = ['co.uk', 'co.jp', 'com.cn', 'com.tw', 'com.au', 'com.hk', 'co.kr'];
+
+function isTrackableTabUrl(url) {
+  const value = String(url || '');
+  return !!value && !(
+    value.startsWith('chrome://') ||
+    value.startsWith('chrome-extension://') ||
+    value.startsWith('about:') ||
+    value.startsWith('edge://') ||
+    value.startsWith('brave://')
+  );
+}
+
+function mainDomainFromHostname(hostname) {
+  if (!hostname) return '';
+  const host = String(hostname).toLowerCase().replace(/\.$/, '').replace(/^www\./, '');
+  if (!host || host === 'localhost') return host;
+  if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(host) || host.includes(':')) return host;
+
+  const parts = host.split('.').filter(Boolean);
+  if (parts.length <= 2) return host;
+
+  const suffix = parts.slice(-2).join('.');
+  if (TWO_PART_PUBLIC_SUFFIXES.includes(suffix)) {
+    return parts.length >= 3 ? parts.slice(-3).join('.') : host;
+  }
+  return parts.slice(-2).join('.');
+}
+
+function usageDomainFromUrl(url) {
+  if (!isTrackableTabUrl(url)) return '';
+  try {
+    if (url.startsWith('file://')) return 'local-files';
+    return mainDomainFromHostname(new URL(url).hostname);
+  } catch {
+    return '';
+  }
+}
+
+function sanitizeTabUsageStats(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+
+  const clean = {};
+  for (const [domain, stat] of Object.entries(raw)) {
+    const key = String(domain || '').trim();
+    if (!key) continue;
+
+    const count = typeof stat === 'number' ? stat : Number(stat && stat.count);
+    const lastUsed = typeof stat === 'object' ? Number(stat.lastUsed || 0) : 0;
+    if (!Number.isFinite(count) || count <= 0) continue;
+
+    clean[key] = {
+      count: Math.min(Math.floor(count), 1000000),
+      lastUsed: Number.isFinite(lastUsed) && lastUsed > 0 ? lastUsed : 0,
+    };
+  }
+  return clean;
+}
+
+function trimTabUsageStats(stats, limit = TAB_USAGE_STATS_LIMIT) {
+  const entries = Object.entries(stats || {});
+  if (entries.length <= limit) return stats;
+
+  entries.sort(([, a], [, b]) => {
+    const aLast = Number(a && a.lastUsed) || 0;
+    const bLast = Number(b && b.lastUsed) || 0;
+    if (aLast !== bLast) return bLast - aLast;
+    return (Number(b && b.count) || 0) - (Number(a && a.count) || 0);
+  });
+
+  return Object.fromEntries(entries.slice(0, limit));
+}
+
+async function recordTabUsage(url) {
+  const domain = usageDomainFromUrl(url);
+  if (!domain) return;
+
+  try {
+    const { [TAB_USAGE_STATS_KEY]: raw = {} } = await chrome.storage.local.get(TAB_USAGE_STATS_KEY);
+    const stats = sanitizeTabUsageStats(raw);
+    const current = stats[domain] || { count: 0, lastUsed: 0 };
+    stats[domain] = {
+      count: Math.min((Number(current.count) || 0) + 1, 1000000),
+      lastUsed: Date.now(),
+    };
+    await chrome.storage.local.set({ [TAB_USAGE_STATS_KEY]: trimTabUsageStats(stats) });
+  } catch (err) {
+    console.warn('[wolfy] tab usage tracking failed:', err);
+  }
+}
+
 /**
  * updateBadge()
  *
@@ -160,6 +253,19 @@ chrome.tabs.onRemoved.addListener(() => {
 // Update badge when a tab's URL changes (e.g. navigating to/from chrome://)
 chrome.tabs.onUpdated.addListener(() => {
   updateBadge();
+});
+
+chrome.tabs.onActivated.addListener(async ({ tabId }) => {
+  try {
+    const tab = await chrome.tabs.get(tabId);
+    await recordTabUsage(tab && tab.url);
+  } catch {}
+});
+
+chrome.tabs.onUpdated.addListener(async (_tabId, changeInfo, tab) => {
+  if (!changeInfo || !changeInfo.url) return;
+  if (tab && !tab.active) return;
+  await recordTabUsage(changeInfo.url || (tab && tab.url));
 });
 
 // ─── Initial run ─────────────────────────────────────────────────────────────

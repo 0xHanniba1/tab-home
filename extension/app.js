@@ -897,7 +897,7 @@ if (chrome.tabs && chrome.tabs.onCreated) {
     }
   });
   chrome.tabs.onMoved.addListener(scheduleLiveRerender);
-  // Switching tabs updates lastAccessed → re-sort by recency
+  // Switching tabs updates lastAccessed → re-sort by recency/usage.
   if (chrome.tabs.onActivated) chrome.tabs.onActivated.addListener(scheduleLiveRerender);
 }
 
@@ -906,7 +906,7 @@ if (chrome.tabs && chrome.tabs.onCreated) {
 if (chrome.storage && chrome.storage.onChanged) {
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local') return;
-    if (changes.tabTitleOverrides) {
+    if (changes.tabTitleOverrides || changes.tabUsageStats) {
       renderDashboard();
       return;
     }

@@ -203,6 +203,7 @@ let domainGroups       = [];   // regular open-tabs groups
 let pinnedDomainGroups = [];   // pinned-tabs groups (rendered above)
 
 const TAB_TITLE_OVERRIDES_KEY = 'tabTitleOverrides';
+const TAB_USAGE_STATS_KEY = 'tabUsageStats';
 
 
 /* ----------------------------------------------------------------
@@ -240,6 +241,41 @@ async function setTabTitleOverride(url, title) {
   else delete overrides[cleanUrl];
 
   await chrome.storage.local.set({ [TAB_TITLE_OVERRIDES_KEY]: overrides });
+}
+
+
+/* ----------------------------------------------------------------
+   OPEN-TAB USAGE STATS — local ranking signal for domain cards
+   ---------------------------------------------------------------- */
+
+function sanitizeTabUsageStats(raw) {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+
+  const clean = {};
+  for (const [domain, stat] of Object.entries(raw)) {
+    const key = String(domain || '').trim();
+    if (!key) continue;
+
+    const count = typeof stat === 'number' ? stat : Number(stat && stat.count);
+    const lastUsed = typeof stat === 'object' ? Number(stat.lastUsed || 0) : 0;
+    if (!Number.isFinite(count) || count <= 0) continue;
+
+    clean[key] = {
+      count: Math.min(Math.floor(count), 1000000),
+      lastUsed: Number.isFinite(lastUsed) && lastUsed > 0 ? lastUsed : 0,
+    };
+  }
+  return clean;
+}
+
+async function getTabUsageStats() {
+  try {
+    const { [TAB_USAGE_STATS_KEY]: raw = {} } =
+      await chrome.storage.local.get(TAB_USAGE_STATS_KEY);
+    return sanitizeTabUsageStats(raw);
+  } catch {
+    return {};
+  }
 }
 
 
@@ -285,4 +321,3 @@ function checkTabOutDupes() {
     banner.style.display = 'none';
   }
 }
-

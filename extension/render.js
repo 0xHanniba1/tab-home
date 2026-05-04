@@ -303,9 +303,11 @@ async function renderStaticDashboard() {
   // Split tabs into pinned + regular and group each subset separately.
   const pinnedRealTabs  = realTabs.filter(t => t.pinned);
   const regularRealTabs = realTabs.filter(t => !t.pinned);
+  const usageStats = await getTabUsageStats();
   const groupOptions = {
     landingPagePatterns: getLandingPagePatterns(),
     customGroups: getCustomGroups(),
+    usageStats,
   };
   pinnedDomainGroups = groupTabsByDomain(pinnedRealTabs, groupOptions);
   domainGroups       = groupTabsByDomain(regularRealTabs, groupOptions);
