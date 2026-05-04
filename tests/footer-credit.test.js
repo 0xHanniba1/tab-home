@@ -19,8 +19,8 @@ assert(
   'footer should credit the direct upstream fork',
 );
 assert(
-  footer.includes('https://github.com/wolfyxbt/tab-home'),
-  'footer should link to the direct upstream fork',
+  !footer.includes('https://github.com/wolfyxbt/tab-home'),
+  'footer should show the direct upstream fork as text, not as a link',
 );
 assert(!footer.includes('Zara'), 'footer should not show the original author in the compact footer');
 assert(!footer.includes('tab-out'), 'footer should not show the original project in the compact footer');
