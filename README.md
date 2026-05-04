@@ -8,6 +8,8 @@ tab-home 是一个 Chrome 新标签页扩展。它把默认的新标签页替换
 
 本仓库是 [0xHanniba1/tab-home](https://github.com/0xHanniba1/tab-home) 的个人维护版本，fork 自 [WolfyXBT/tab-home](https://github.com/wolfyxbt/tab-home)，上游项目基于 [Zara/tab-out](https://github.com/zarazhangrui/tab-out)。
 
+![tab-home 新标签页界面](docs/assets/tab-home-preview.png)
+
 ---
 
 ## 你会得到什么
