@@ -121,10 +121,10 @@ const ICON_MOON = `<svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="
 async function loadTheme() {
   try {
     const { theme } = await chrome.storage.local.get('theme');
-    const t = theme === 'dark' ? 'dark' : 'light';
+    const t = theme === 'light' ? 'light' : 'dark';
     document.documentElement.dataset.theme = t;
   } catch {
-    document.documentElement.dataset.theme = 'light';
+    document.documentElement.dataset.theme = 'dark';
   }
   paintThemeToggle();
 }

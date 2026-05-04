@@ -11,7 +11,7 @@
 
   <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body data-ui="console-dark">
 <div class="container">
 
 
@@ -21,8 +21,14 @@
        ================================================================ -->
   <header>
     <div class="header-left">
+      <div class="brand">
+        <span class="brand-name">tab-home</span>
+      </div>
       <!-- "Sunday · 03/05/2026" — written by getDateDisplay() in ui.js -->
-      <div class="date" id="dateDisplay"></div>
+      <div class="crumbs">
+        <span class="crumb-sep">/</span>
+        <span class="date" id="dateDisplay"></span>
+      </div>
     </div>
     <div class="header-right">
       <!-- tab-home duplicate-tabs pill — appears when more than one new-tab page
