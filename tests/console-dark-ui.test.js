@@ -38,11 +38,18 @@ assert(lightTheme.includes('--console-footer'), 'light theme should provide a li
 assert(lightTheme.includes('--console-favorite-bg'), 'light theme should provide a light favorites tile token');
 assert(lightTheme.includes('--console-topbar: transparent'), 'light theme topbar should blend into the page background');
 assert(lightTheme.includes('--console-footer: transparent'), 'light theme footer should blend into the page background');
+assert(lightTheme.includes('--toast-bg: #fffdf9'), 'light theme toast should use a light card background');
+assert(lightTheme.includes('--toast-fg: #1a1613'), 'light theme toast should use dark readable text');
 
 const footer = ruleBody('footer');
 assert(footer.includes('var(--console-footer'), 'footer should use theme-specific console footer color');
 
 const favoriteItem = ruleBody('.favorite-item');
 assert(favoriteItem.includes('var(--console-favorite-bg'), 'favorites should use theme-specific tile color');
+
+const toast = ruleBody('.toast');
+assert(toast.includes('background: var(--toast-bg'), 'toast should use theme-specific background');
+assert(toast.includes('color: var(--toast-fg'), 'toast should use theme-specific text color');
+assert(toast.includes('border: 1px solid var(--toast-border'), 'toast should use theme-specific border');
 
 console.log('console dark UI test passed');

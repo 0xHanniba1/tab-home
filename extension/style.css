@@ -28,6 +28,10 @@
   --console-favorite-bg: var(--console-bg-2);
   --console-glow-1:    oklch(22% 0.02 145 / 0.18);
   --console-glow-2:    oklch(20% 0.02 250 / 0.4);
+  --toast-bg:          var(--console-surface-2);
+  --toast-fg:          var(--console-fg);
+  --toast-border:      var(--console-border-2);
+  --toast-shadow:      rgba(0, 0, 0, 0.36);
 
   color-scheme: dark;
   --ink: var(--console-fg);
@@ -70,6 +74,10 @@
   --console-favorite-bg: #fffdf9;
   --console-glow-1: rgba(90, 122, 98, 0.08);
   --console-glow-2: rgba(232, 226, 218, 0.55);
+  --toast-bg: #fffdf9;
+  --toast-fg: #1a1613;
+  --toast-border: #e8e2da;
+  --toast-shadow: rgba(26, 22, 19, 0.12);
   --ink: #1a1613;
   --paper: #f8f5f0;
   --warm-gray: #e8e2da;
@@ -780,14 +788,15 @@ header {
   bottom: 32px;
   left: 50%;
   transform: translateX(-50%) translateY(80px);
-  background: var(--ink);
-  color: var(--paper);
+  background: var(--toast-bg);
+  color: var(--toast-fg);
   font-family: 'DM Sans', sans-serif;
   font-size: 13px;
   font-weight: 500;
   padding: 12px 24px;
-  border-radius: 0;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.2);
+  border: 1px solid var(--toast-border);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px var(--toast-shadow);
   z-index: 100;
   opacity: 0;
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
