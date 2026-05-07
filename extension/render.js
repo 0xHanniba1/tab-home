@@ -20,6 +20,9 @@ const ICONS = {
 };
 
 const OPEN_TAB_CARD_VISIBLE_LIMIT = 2;
+const FEATURED_OPEN_TAB_MIN_TAB_COUNT = 6;
+const FEATURED_OPEN_TAB_MIN_LEAD = 3;
+const FEATURED_OPEN_TAB_MIN_RATIO = 1.5;
 
 
 /* ----------------------------------------------------------------
@@ -170,6 +173,79 @@ function renderDomainCard(group, favoritedUrls = new Set(), titleOverrides = {})
         <div class="mission-page-count">${tabCount}</div>
         <div class="mission-page-label">${t('tabs')}</div>
       </div>
+    </div>`;
+}
+
+function getConfiguredFeaturedOpenTabGroupKeys() {
+  const localKeys = (typeof LOCAL_FEATURED_OPEN_TAB_GROUP_KEYS !== 'undefined' && Array.isArray(LOCAL_FEATURED_OPEN_TAB_GROUP_KEYS))
+    ? LOCAL_FEATURED_OPEN_TAB_GROUP_KEYS
+    : [];
+  return localKeys
+    .map(key => String(key || '').trim().toLowerCase())
+    .filter(Boolean);
+}
+
+function isConfiguredFeaturedOpenTabGroup(group) {
+  if (!group) return false;
+  const keys = getConfiguredFeaturedOpenTabGroupKeys();
+  if (keys.length === 0) return false;
+  const domain = String(group.domain || '').toLowerCase();
+  const label = String(group.label || friendlyDomain(group.domain) || '').toLowerCase();
+  return keys.includes(domain) || keys.includes(label);
+}
+
+function openTabGroupSize(group) {
+  return (group && Array.isArray(group.tabs)) ? group.tabs.length : 0;
+}
+
+function selectAutoFeaturedOpenTabGroup(groups) {
+  const ranked = [...(groups || [])].sort((a, b) => openTabGroupSize(b) - openTabGroupSize(a));
+  const top = ranked[0];
+  if (!top) return null;
+
+  const topCount = openTabGroupSize(top);
+  const secondCount = openTabGroupSize(ranked[1]);
+  if (topCount < FEATURED_OPEN_TAB_MIN_TAB_COUNT) return null;
+  if (secondCount > 0 && topCount - secondCount < FEATURED_OPEN_TAB_MIN_LEAD) return null;
+  if (secondCount > 0 && topCount / secondCount < FEATURED_OPEN_TAB_MIN_RATIO) return null;
+  return top;
+}
+
+function splitOpenTabGroups(groups) {
+  const allGroups = groups || [];
+  const featured = [];
+  const regular = [];
+  const configuredFeatured = allGroups.filter(isConfiguredFeaturedOpenTabGroup);
+  const autoFeatured = configuredFeatured.length === 0
+    ? selectAutoFeaturedOpenTabGroup(allGroups)
+    : null;
+  const featuredSet = new Set(configuredFeatured);
+  if (autoFeatured) featuredSet.add(autoFeatured);
+
+  for (const group of allGroups) {
+    (featuredSet.has(group) ? featured : regular).push(group);
+  }
+  return { featured, regular };
+}
+
+function renderOpenTabGroups(groups, favoritedUrls = new Set(), titleOverrides = {}) {
+  const allGroups = groups || [];
+  const { featured, regular } = splitOpenTabGroups(allGroups);
+
+  if (featured.length === 0) {
+    return allGroups.map(g => renderDomainCard(g, favoritedUrls, titleOverrides)).join('');
+  }
+
+  const layoutClasses = ['open-tabs-layout', 'has-featured-domains'];
+  if (regular.length === 0) layoutClasses.push('featured-only');
+
+  const featuredHtml = featured.map(g => renderDomainCard(g, favoritedUrls, titleOverrides)).join('');
+  const regularHtml = regular.map(g => renderDomainCard(g, favoritedUrls, titleOverrides)).join('');
+
+  return `
+    <div class="${layoutClasses.join(' ')}">
+      <div class="featured-open-tabs">${featuredHtml}</div>
+      ${regular.length > 0 ? `<div class="regular-open-tabs">${regularHtml}</div>` : ''}
     </div>`;
 }
 
@@ -355,9 +431,11 @@ async function renderStaticDashboard() {
     if (openTabsSectionAction) {
       openTabsSectionAction.innerHTML = `<button class="action-btn close-tabs" data-action="close-all-open-tabs">${ICONS.close} ${t('closeAllN', regularRealTabs.length)}</button>`;
     }
-    openTabsMissionsEl.innerHTML = domainGroups.map(g => renderDomainCard(g, favoritedUrls, titleOverrides)).join('');
+    openTabsMissionsEl.classList.toggle('has-featured-open-tabs', splitOpenTabGroups(domainGroups).featured.length > 0);
+    openTabsMissionsEl.innerHTML = renderOpenTabGroups(domainGroups, favoritedUrls, titleOverrides);
     openTabsSubSection.style.display = 'block';
   } else if (openTabsSubSection) {
+    if (openTabsMissionsEl) openTabsMissionsEl.classList.remove('has-featured-open-tabs');
     openTabsSubSection.style.display = 'none';
     if (openTabsSectionAction) openTabsSectionAction.innerHTML = '';
   }
